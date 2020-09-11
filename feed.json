@@ -1,4 +1,29 @@
 {
-    "bookTitle": "A simple playground",
-    "publishDate": 2020,
+    "title": " our first playground",
+    "subtitle": " A world",
+    "publisherName": "zai1208 & NightmareWolf54",
+    "feedIdentifier": "raw.githubusercontent.com/",
+    "contactURL": "https://zai1208.github.io",
+    "formatVersion": "1.0",
+    "documents": [
+        {
+            "title": "",
+            "overviewSubtitle": "Dynamically Choosing Among Key Paths",
+            "detailSubtitle": "Because key paths in Swift are applied at runtime, their behavior is dynamic.",
+            "description": "Learn to compare key paths and pick the right one.",
+            "contentIdentifier": "com.example.whimsicalswift.keypaths",
+            "contentVersion": "1.0",
+            "url": "world.playgroundbook.zip",
+            "thumbnailURL": "keypaths/thumbnail.png",
+            "bannerImageURL": "keypaths/banner.png",
+            "additionalInformation": [
+                {
+                    "name": "Languages",
+                    "value": "English"
+                }
+            ],
+            
+        }
+        
+    ]
 }
