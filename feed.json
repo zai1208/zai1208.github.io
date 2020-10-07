@@ -11,7 +11,6 @@
             "overviewSubtitle": "Dynamically Choosing Among Key Paths",
             "detailSubtitle": "Because key paths in Swift are applied at runtime, their behavior is dynamic.",
             "description": "Learn to compare key paths and pick the right one.",
-            "contentIdentifier": "com.example.whimsicalswift.keypaths",
             "contentVersion": "1.0",
             "url": "Sonic Create.playgroundbook.zip",
             "additionalInformation": [
