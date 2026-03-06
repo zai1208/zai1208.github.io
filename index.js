@@ -57,8 +57,8 @@ function failed(msg) {
 }
 
 for (let i = 0; i < bootMessages.length; i++) {
+  delay += getRandomIntInclusive(min, max);
   if (i === 13) {
-    delay += getRandomIntInclusive(min, max);
     setTimeout(() => {
       log('<span style="color: #00ffff">' + bootMessages[i] + '</span>');
     }, delay);
@@ -67,13 +67,11 @@ for (let i = 0; i < bootMessages.length; i++) {
     continue;
   }
   if (i === 9) {
-    delay += getRandomIntInclusive(min, max);
     setTimeout(() => {
       warn(bootMessages[i]);
     }, delay);
     continue;
   }
-  delay += getRandomIntInclusive(min, max);
     setTimeout(() => {
         ok(bootMessages[i]);
     }, delay);
