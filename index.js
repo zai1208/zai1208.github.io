@@ -77,3 +77,6 @@ for (let i = 0; i < bootMessages.length; i++) {
     }, delay);
 }
 
+setTimeout(() => {
+  boot_log.remove();
+}, bootMessages.length * 400);
