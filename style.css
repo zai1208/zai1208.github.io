@@ -1,15 +1,15 @@
 @font-face {
-  font-family: 'Terminus';
+  font-family: 'WebPlus_IBM_VGA_9x16';
   src: url('fonts/WebPlus_IBM_VGA_9x16.woff') format('woff'); /* Use woff2 for web */
 }
 
-#boot_log {
+#boot-log {
     color: #ffffff;
     background-color: #000000;
     padding: 10px;
     max-height: 400px;
     overflow-y: hidden;
-    font-family: 'Terminus', monospace;
+    font-family: 'WebPlus_IBM_VGA_9x16', monospace;
     font-size: 14px; /* Best at specific, usually small, integer sizes */
   
     /* Critical for crisp pixels */
@@ -21,9 +21,60 @@
     /* Preserve spaces and line breaks like a terminal */
     white-space: pre; 
     line-height: 1.2;
-
 }
 
+#terminal {
+    color: #ffffff;
+    background-color: #000000;
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: 'Hack', monospace;
+    font-size: 14px; /* Best at specific, usually small, integer sizes */
+    border: 1px solid #00ff00; /* Optional: Add a green border to distinguish the terminal */
+    /* Critical for crisp pixels */
+    image-rendering: pixelated; 
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: none;
+  
+    /* Preserve spaces and line breaks like a terminal */
+    white-space: pre; 
+    line-height: 1.2;
+}
+#titlebar {
+  color: #ffffff;
+  background-color: #000000;
+  position: absolute;
+  top: 10px;
+  bottom: calc(100% - 50px);
+  font-family: 'WebPlus_IBM_VGA_9x16', monospace;
+  font-size: 14px; /* Best at specific, usually small, integer sizes */
+  
+  /* Critical for crisp pixels */
+  image-rendering: pixelated; 
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: none;
+}
+span {
+  color: #ffffff;
+  background-color: #000000;
+  border: none;
+  outline: none;
+  font-size: 14px; /* Best at specific, usually small, integer sizes */
+  width: 100%;
+  
+  /* Critical for crisp pixels */
+  image-rendering: pixelated; 
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: none;
+}
 body {
   background-color: #000000;
 }
