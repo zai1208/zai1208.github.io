@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KINETYPE MAP EDITOR</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #1a1a24;
+    --bg2: #262633;
+    --border: #3a3a50;
+    --white: #e8e8f0;
+    --dim: #5a5a78;
+    --accent: #c8c8ff;
+    --cursor: #ffffff;
+    --cell: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  header h1 span { color: var(--accent); }
+
+  .coords {
+    font-size: 11px;
+    color: var(--dim);
+    margin-left: auto;
+  }
+
+  .coords span { color: var(--white); }
+
+  .toolbar {
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.1s;
+  }
+
+  button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  button.active {
+    border-color: var(--white);
+    color: var(--white);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .sep {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+  }
+
+  .mode-label {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 0.15em;
+  }
+
+  .main {
+    flex: 1;
+    overflow: auto;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .grid-wrap {
+    position: relative;
+  }
+
+  canvas {
+    display: block;
+    cursor: crosshair;
+    image-rendering: pixelated;
+  }
+
+  .statusbar {
+    padding: 4px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--dim);
+    display: flex;
+    gap: 24px;
+    flex-shrink: 0;
+    letter-spacing: 0.1em;
+  }
+
+  .statusbar span { color: var(--white); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>KINETYPE</span> MAP EDITOR</h1>
+  <div class="coords">cursor: <span id="coordDisplay">0, 0</span> &nbsp;|&nbsp; size: <span>50 × 50</span></div>
+</header>
+
+<div class="toolbar">
+  <button class="active" id="modeType" onclick="setMode('type')">TYPE</button>
+  <button id="modePaint" onclick="setMode('paint')">PAINT</button>
+  <button id="modeErase" onclick="setMode('erase')">ERASE</button>
+  <div class="sep"></div>
+  <button onclick="clearGrid()">CLEAR</button>
+  <div class="sep"></div>
+  <button onclick="exportMap()">EXPORT .TXT</button>
+  <button onclick="importMap()">IMPORT .TXT</button>
+  <input type="file" id="fileInput" accept=".txt" style="display:none" onchange="handleImport(event)">
+  <div class="sep"></div>
+  <span class="mode-label">PAINT CHAR: <span id="paintCharDisplay" style="color:#e8e8f0">.</span></span>
+  &nbsp;
+  <input id="paintCharInput" type="text" maxlength="1" value="."
+    style="background:none;border:1px solid #3a3a50;color:#e8e8f0;font-family:'Share Tech Mono',monospace;font-size:11px;width:24px;padding:2px 4px;"
+    oninput="updatePaintChar(this.value)">
+</div>
+
+<div class="main">
+  <div class="grid-wrap">
+    <canvas id="grid"></canvas>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div>MODE: <span id="modeDisplay">TYPE</span></div>
+  <div>CELLS: <span id="cellCount">0</span> / 2500</div>
+  <div>PRESS <span>ESC</span> TO DESELECT &nbsp;|&nbsp; <span>BACKSPACE</span> TO DELETE &nbsp;|&nbsp; ARROWS TO MOVE</div>
+</div>
+
+<input type="text" id="hiddenInput" style="position:fixed;opacity:0;pointer-events:none;top:0;left:0;" autocomplete="off">
+
+<script>
+const COLS = 50, ROWS = 50;
+const CELL = 16;
+const FONT_SIZE = 13;
+const PAD_X = 2, PAD_Y = 1;
+
+const BG     = '#1a1a24';
+const BG2    = '#262633';
+const BORDER = '#3a3a50';
+const WHITE  = '#e8e8f0';
+const DIM    = '#3a3a54';
+const ACCENT = '#c8c8ff';
+const CURSOR_COL = '#ffffff';
+
+let grid = Array.from({length: ROWS}, () => Array(COLS).fill(''));
+let cursorR = 0, cursorC = 0;
+let mode = 'type';
+let paintChar = '.';
+let mouseDown = false;
+
+const canvas = document.getElementById('grid');
+const ctx = canvas.getContext('2d');
+canvas.width = COLS * CELL;
+canvas.height = ROWS * CELL;
+
+ctx.font = `${FONT_SIZE}px "Share Tech Mono", monospace`;
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // background
+  ctx.fillStyle = BG2;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // grid lines
+  ctx.strokeStyle = DIM;
+  ctx.lineWidth = 0.5;
+  for (let r = 0; r <= ROWS; r++) {
+    ctx.beginPath();
+    ctx.moveTo(0, r * CELL);
+    ctx.lineTo(COLS * CELL, r * CELL);
+    ctx.stroke();
+  }
+  for (let c = 0; c <= COLS; c++) {
+    ctx.beginPath();
+    ctx.moveTo(c * CELL, 0);
+    ctx.lineTo(c * CELL, ROWS * CELL);
+    ctx.stroke();
+  }
+
+  // cells
+  ctx.font = `${FONT_SIZE}px "Share Tech Mono", monospace`;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const ch = grid[r][c];
+      if (ch) {
+        ctx.fillStyle = WHITE;
+        ctx.fillText(ch, c * CELL + PAD_X, r * CELL + CELL - PAD_Y - 1);
+      }
+    }
+  }
+
+  // cursor
+  const cx = cursorC * CELL;
+  const cy = cursorR * CELL;
+
+  if (mode === 'type') {
+    ctx.fillStyle = CURSOR_COL;
+    ctx.fillRect(cx, cy, CELL, CELL);
+    if (grid[cursorR][cursorC]) {
+      ctx.fillStyle = BG2;
+      ctx.fillText(grid[cursorR][cursorC], cx + PAD_X, cy + CELL - PAD_Y - 1);
+    }
+  } else {
+    ctx.strokeStyle = ACCENT;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx + 1, cy + 1, CELL - 2, CELL - 2);
+  }
+
+  updateStatus();
+}
+
+function updateStatus() {
+  document.getElementById('coordDisplay').textContent = `${cursorC}, ${cursorR}`;
+  let count = 0;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (grid[r][c]) count++;
+  document.getElementById('cellCount').textContent = count;
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeType').classList.toggle('active', m === 'type');
+  document.getElementById('modePaint').classList.toggle('active', m === 'paint');
+  document.getElementById('modeErase').classList.toggle('active', m === 'erase');
+  document.getElementById('modeDisplay').textContent = m.toUpperCase();
+  draw();
+}
+
+function updatePaintChar(v) {
+  if (v.length > 0) {
+    paintChar = v[v.length - 1];
+    document.getElementById('paintCharDisplay').textContent = paintChar;
+    document.getElementById('paintCharInput').value = paintChar;
+  }
+}
+
+// keyboard
+document.addEventListener('keydown', e => {
+  if (mode !== 'type') return;
+
+  if (e.key === 'ArrowRight') { cursorC = Math.min(COLS-1, cursorC+1); e.preventDefault(); }
+  else if (e.key === 'ArrowLeft') { cursorC = Math.max(0, cursorC-1); e.preventDefault(); }
+  else if (e.key === 'ArrowDown') { cursorR = Math.min(ROWS-1, cursorR+1); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { cursorR = Math.max(0, cursorR-1); e.preventDefault(); }
+  else if (e.key === 'Backspace') {
+    grid[cursorR][cursorC] = '';
+    cursorC = Math.max(0, cursorC - 1);
+    e.preventDefault();
+  } else if (e.key === 'Delete') {
+    grid[cursorR][cursorC] = '';
+    e.preventDefault();
+  } else if (e.key === 'Enter') {
+    cursorR = Math.min(ROWS-1, cursorR+1);
+    cursorC = 0;
+    e.preventDefault();
+  } else if (e.key.length === 1) {
+    grid[cursorR][cursorC] = e.key;
+    cursorC = Math.min(COLS-1, cursorC+1);
+  }
+  draw();
+});
+
+// mouse
+canvas.addEventListener('mousedown', e => {
+  mouseDown = true;
+  handleMouse(e);
+});
+canvas.addEventListener('mousemove', e => { if (mouseDown) handleMouse(e); });
+canvas.addEventListener('mouseup', () => mouseDown = false);
+canvas.addEventListener('mouseleave', () => mouseDown = false);
+
+canvas.addEventListener('mousemove', e => {
+  const r = Math.floor(e.offsetY / CELL);
+  const c = Math.floor(e.offsetX / CELL);
+  document.getElementById('coordDisplay').textContent = `${c}, ${r}`;
+});
+
+function handleMouse(e) {
+  const r = Math.floor(e.offsetY / CELL);
+  const c = Math.floor(e.offsetX / CELL);
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+
+  if (mode === 'type') {
+    cursorR = r; cursorC = c;
+  } else if (mode === 'paint') {
+    grid[r][c] = paintChar;
+  } else if (mode === 'erase') {
+    grid[r][c] = '';
+  }
+  draw();
+}
+
+function clearGrid() {
+  if (!confirm('Clear the entire grid?')) return;
+  grid = Array.from({length: ROWS}, () => Array(COLS).fill(''));
+  draw();
+}
+
+function exportMap() {
+  let lines = [];
+  for (let r = 0; r < ROWS; r++) {
+    // trim trailing empty cells but keep up to last filled col
+    let line = '';
+    let lastFilled = -1;
+    for (let c = 0; c < COLS; c++) if (grid[r][c]) lastFilled = c;
+    for (let c = 0; c <= lastFilled; c++) line += grid[r][c] || ' ';
+    lines.push(line);
+  }
+  // trim trailing empty lines
+  while (lines.length > 0 && lines[lines.length-1].trim() === '') lines.pop();
+
+  const blob = new Blob([lines.join('\n')], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'map.txt';
+  a.click();
+}
+
+function importMap() {
+  document.getElementById('fileInput').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const lines = ev.target.result.split('\n');
+    grid = Array.from({length: ROWS}, () => Array(COLS).fill(''));
+    for (let r = 0; r < Math.min(lines.length, ROWS); r++) {
+      for (let c = 0; c < Math.min(lines[r].length, COLS); c++) {
+        grid[r][c] = lines[r][c] === ' ' ? '' : lines[r][c];
+      }
+    }
+    draw();
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+draw();
+</script>
+</body>
+</html>
