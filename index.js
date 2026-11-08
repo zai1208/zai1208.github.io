@@ -140,22 +140,23 @@ function processCommand(command) {
   const output = document.createElement('div');
   switch (command) {
     case 'help':
-      output.innerHTML = '<span style="color: #00ffff">Available commands: help, about, clear</span>';
+      output.innerHTML = '<span style="color: #00ffff">Available commands: help, about, clear, privacy</span>';
       break;
     case 'about':
       output.innerHTML = '<span style="color: #00ffff">ZainOS - A Portfolio Operating System by Zain</span>';
       break;
     case 'clear':
       terminal.innerHTML = '';
+      return; // returns immediately so it doesn't try to append 'output'
     case 'privacy':
       output.innerHTML = '<span style="color: #00ffff">Privacy Policy: Zero tracking. Local storage is used exclusively for UI states (like skipping the boot sequence). No data leaves your browser.</span>';
       break;
-      return;
     default:
       output.innerHTML = `<span style="color: #ff0000">Command not found: ${command}</span>`;
   }
   terminal.appendChild(output);
 }
+
 if (localStorage.getItem('zainosBooted') !== 'true') {
 setTimeout(() => {
   startTerminal();
