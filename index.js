@@ -147,6 +147,9 @@ function processCommand(command) {
       break;
     case 'clear':
       terminal.innerHTML = '';
+    case 'privacy':
+      output.innerHTML = '<span style="color: #00ffff">Privacy Policy: Zero tracking. Local storage is used exclusively for UI states (like skipping the boot sequence). No data leaves your browser.</span>';
+      break;
       return;
     default:
       output.innerHTML = `<span style="color: #ff0000">Command not found: ${command}</span>`;
