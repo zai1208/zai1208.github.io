@@ -89,20 +89,6 @@ if (localStorage.getItem('zainosBooted') !== 'true') {
 
 function startTerminal() {
   // Add this to your initialization or terminal setup
-document.getElementById('privacy-link').addEventListener('click', (e) => {
-  e.preventDefault();
-  
-  // If your terminal is active, print it there, or alert/show a small modal
-  const existingTerminal = document.getElementById('terminal');
-  if (existingTerminal) {
-    const output = document.createElement('div');
-    output.innerHTML = '<span style="color: #ffff00">Privacy Notice: This site is client-side only. It uses local storage strictly to remember your boot preference ("zainosBooted") and transmits no tracking or personal data to any external server.</span>';
-    existingTerminal.appendChild(output);
-    existingTerminal.scrollTop = existingTerminal.scrollHeight;
-  } else {
-    alert('Privacy Notice: This site runs entirely client-side. It uses localStorage only for UI state and does not collect or track personal data.');
-  }
-});
   const terminal = document.body.appendChild(document.createElement('div'));
   terminal.id = 'terminal';
   terminal.innerHTML += '<span style="color: #00ffff">Type "help" for a list of commands.</span><br>';
@@ -113,26 +99,34 @@ document.getElementById('privacy-link').addEventListener('click', (e) => {
 }
 function createNewline() {
   const newline = document.createElement('div');
-  promptSpan = document.createElement('span');
-  inputField = document.createElement('span');
+  const promptSpan = document.createElement('span');
+  const inputField = document.createElement('span');
+  
   inputField.contentEditable = true;
   inputField.spellcheck = false;
   inputField.id = 'input-field';
+  
   promptSpan.textContent = 'zain@zainOS:~$ ';
   newline.appendChild(promptSpan);
-  terminal.appendChild(newline);
   newline.appendChild(inputField);
+  terminal.appendChild(newline);
+  
   inputField.focus();
-  inputField.addEventListener('keydown', (e) => {
+
+  // Handle keydown directly on the active input field
+  inputField.onkeydown = function(e) {
     if (e.key === 'Enter') {
       e.preventDefault();
       const command = inputField.textContent.trim();
-      processCommand(command);
+      
+      // Lock this input field so it can't be edited anymore
       inputField.contentEditable = false;
-      createNewline();
+      inputField.onkeydown = null; // Clear handler so it doesn't re-trigger
+      
+      processCommand(command);
+      createNewline(); // Spawn the next prompt line
     }
-  });
-
+  };
 }
 
 
@@ -167,4 +161,26 @@ setTimeout(() => {
   createNewline();
 }
 
-
+document.getElementById('privacy-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  
+  const existingTerminal = document.getElementById('terminal');
+  if (existingTerminal) {
+    // 1. Print the privacy notice output
+    const output = document.createElement('div');
+    output.innerHTML = '<span style="color: #ffff00">Privacy Policy: Zero tracking. Local storage is used exclusively for UI states (like skipping the boot sequence). No data leaves your browser.</span>';
+    existingTerminal.appendChild(output);
+    existingTerminal.scrollTop = existingTerminal.scrollHeight;
+    
+    // 2. Clear out or deactivate the current active input field if there is one
+    const activeInput = document.getElementById('input-field');
+    if (activeInput) {
+      activeInput.contentEditable = false;
+      activeInput.onkeydown = null;
+      activeInput.removeAttribute('id'); // Remove ID so the new line can claim it
+    }
+    
+    // 3. Create a brand new input prompt line
+    createNewline();
+  }
+});
