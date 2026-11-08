@@ -88,6 +88,21 @@ if (localStorage.getItem('zainosBooted') !== 'true') {
 }
 
 function startTerminal() {
+  // Add this to your initialization or terminal setup
+document.getElementById('privacy-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  
+  // If your terminal is active, print it there, or alert/show a small modal
+  const existingTerminal = document.getElementById('terminal');
+  if (existingTerminal) {
+    const output = document.createElement('div');
+    output.innerHTML = '<span style="color: #ffff00">Privacy Notice: This site is client-side only. It uses local storage strictly to remember your boot preference ("zainosBooted") and transmits no tracking or personal data to any external server.</span>';
+    existingTerminal.appendChild(output);
+    existingTerminal.scrollTop = existingTerminal.scrollHeight;
+  } else {
+    alert('Privacy Notice: This site runs entirely client-side. It uses localStorage only for UI state and does not collect or track personal data.');
+  }
+});
   const terminal = document.body.appendChild(document.createElement('div'));
   terminal.id = 'terminal';
   terminal.innerHTML += '<span style="color: #00ffff">Type "help" for a list of commands.</span><br>';
